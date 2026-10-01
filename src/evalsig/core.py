@@ -84,7 +84,6 @@ class Summary:
     alpha: float
     resamples: int
     seed: int
-    warnings: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -149,12 +148,7 @@ def compare_arrays(
     multiple = len(raw) > 1
     adjusted = stats.holm([r.p_value for r in raw]) if multiple else [raw[0].p_value]
     metrics = tuple(
-        replace(
-            r,
-            higher_is_better=r.metric not in lower_is_better,
-            p_adjusted=p,
-            verdict=_verdict(r.diff, p, alpha, higher_is_better=r.metric not in lower_is_better),
-        )
+        _finish(r, p, alpha, len(raw), higher_is_better=r.metric not in lower_is_better)
         for r, p in zip(raw, adjusted, strict=True)
     )
     return Comparison(
@@ -286,6 +280,32 @@ def _summarize_metric(
         ci_high=ci_high,
         method=method,
         notes=notes,
+    )
+
+
+def _finish(
+    r: MetricComparison, p_adjusted: float, alpha: float, n_metrics: int, *, higher_is_better: bool
+) -> MetricComparison:
+    """Set the adjusted p-value and verdict, and explain when interval and verdict disagree."""
+    verdict = _verdict(r.diff, p_adjusted, alpha, higher_is_better=higher_is_better)
+    excludes_zero = r.ci_low > 0 or r.ci_high < 0
+    notes = list(r.notes)
+    if excludes_zero and verdict == NO_DIFFERENCE:
+        if r.p_value < alpha <= p_adjusted:
+            notes.append(
+                f"Significant on its own (p = {r.p_value:.3f}) but not after correcting for "
+                f"{n_metrics} metrics. The interval shown is not corrected."
+            )
+        else:
+            notes.append("Borderline: the interval excludes 0 but the permutation test does not.")
+    elif not excludes_zero and verdict != NO_DIFFERENCE:
+        notes.append("Borderline: the permutation test is significant but the interval touches 0.")
+    return replace(
+        r,
+        higher_is_better=higher_is_better,
+        p_adjusted=p_adjusted,
+        verdict=verdict,
+        notes=tuple(notes),
     )
 
 

@@ -165,3 +165,15 @@ def test_to_dict_and_json() -> None:
     assert data == json.loads(json.dumps(result.to_dict()))
     assert data["metrics"][0]["metric"] == "acc"
     assert data["seed"] == 0 and data["resamples"] == 10_000
+
+
+def test_note_when_holm_correction_changes_the_verdict() -> None:
+    base, cand = binary_runs(fixed=12, broke=3, both_pass=70, both_fail=66)
+    null = [0.0, 1.0] * 75 + [0.5]
+    alone = compare_arrays({"acc": base}, {"acc": cand}).metrics[0]
+    assert alone.verdict == "better" and alone.ci_low > 0
+    together = compare_arrays(
+        {"acc": base, "b": null, "c": null}, {"acc": cand, "b": null[::-1], "c": null[::-1]}
+    ).metrics[0]
+    assert together.verdict == NO_DIFFERENCE and together.ci_low > 0
+    assert any("not after correcting for 3 metrics" in note for note in together.notes)
