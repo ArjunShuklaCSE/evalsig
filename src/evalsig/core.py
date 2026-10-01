@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from typing import Any, Literal
 
@@ -31,6 +31,7 @@ class EvalsigError(ValueError):
 class MetricComparison:
     metric: str
     kind: Kind
+    higher_is_better: bool
     n: int
     n_groups: int | None
     baseline: float
@@ -55,6 +56,7 @@ class Comparison:
     resamples: int
     seed: int
     correction: Literal["holm", "none"]
+    warnings: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -82,6 +84,7 @@ class Summary:
     alpha: float
     resamples: int
     seed: int
+    warnings: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -104,6 +107,7 @@ def compare_arrays(
     candidate: Mapping[str, ArrayLike],
     kinds: Mapping[str, Kind] | None = None,
     groups: Sequence[str] | None = None,
+    lower_is_better: Collection[str] = (),
     *,
     alpha: float = 0.05,
     resamples: int = 10_000,
@@ -112,11 +116,14 @@ def compare_arrays(
     """Compare two runs whose arrays are already aligned row by row.
 
     Each metric gets a fresh generator seeded with ``seed``, so a metric's result does
-    not depend on which other metrics are compared alongside it.
+    not depend on which other metrics are compared alongside it. Metrics named in
+    ``lower_is_better`` (latency, cost, error rate) are "better" when they go down.
     """
     _check_settings(alpha, resamples)
     if not baseline:
         raise EvalsigError("No metrics to compare.")
+    _check_known("lower_is_better", lower_is_better, baseline)
+    _check_known("metric type", kinds or {}, baseline)
     if list(baseline) != list(candidate):
         raise EvalsigError(
             f"Baseline metrics {list(baseline)} do not match candidate metrics {list(candidate)}."
@@ -142,7 +149,12 @@ def compare_arrays(
     multiple = len(raw) > 1
     adjusted = stats.holm([r.p_value for r in raw]) if multiple else [raw[0].p_value]
     metrics = tuple(
-        replace(r, p_adjusted=p, verdict=_verdict(r.diff, p, alpha))
+        replace(
+            r,
+            higher_is_better=r.metric not in lower_is_better,
+            p_adjusted=p,
+            verdict=_verdict(r.diff, p, alpha, higher_is_better=r.metric not in lower_is_better),
+        )
         for r, p in zip(raw, adjusted, strict=True)
     )
     return Comparison(
@@ -167,6 +179,7 @@ def summarize_arrays(
     _check_settings(alpha, resamples)
     if not values:
         raise EvalsigError("No metrics to summarize.")
+    _check_known("metric type", kinds or {}, values)
     kinds = kinds or {}
     n = len(np.asarray(next(iter(values.values()))))
     codes, n_groups = _group_codes(groups, n)
@@ -221,6 +234,7 @@ def _compare_metric(
     return MetricComparison(
         metric=name,
         kind=kind,
+        higher_is_better=True,
         n=len(b),
         n_groups=n_groups,
         baseline=float(b.mean()),
@@ -275,10 +289,16 @@ def _summarize_metric(
     )
 
 
-def _verdict(diff: float, p_adjusted: float, alpha: float) -> str:
+def _verdict(diff: float, p_adjusted: float, alpha: float, *, higher_is_better: bool) -> str:
     if p_adjusted < alpha and diff != 0:
-        return BETTER if diff > 0 else WORSE
+        return BETTER if (diff > 0) == higher_is_better else WORSE
     return NO_DIFFERENCE
+
+
+def _check_known(what: str, names: Iterable[str], metrics: Mapping[str, object]) -> None:
+    unknown = [name for name in names if name not in metrics]
+    if unknown:
+        raise EvalsigError(f"{what}: unknown metric(s) {', '.join(unknown)}.")
 
 
 def _check_settings(alpha: float, resamples: int) -> None:

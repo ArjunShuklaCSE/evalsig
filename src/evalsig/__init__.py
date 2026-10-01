@@ -9,6 +9,9 @@ from .core import (
     compare_arrays,
     summarize_arrays,
 )
+from .data import compare, load_rows, summarize
+
+__version__ = "0.1.0"
 
 __all__ = [
     "Comparison",
@@ -16,6 +19,9 @@ __all__ = [
     "MetricComparison",
     "MetricSummary",
     "Summary",
+    "compare",
     "compare_arrays",
+    "load_rows",
+    "summarize",
     "summarize_arrays",
 ]
