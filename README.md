@@ -121,7 +121,8 @@ Under the table:
 evalsig ships as a composite GitHub Action. It compares the two result files, writes the report to the job summary, and posts **one** comment on the pull request. Later runs **update that comment** instead of adding new ones; the action finds it by a hidden `<!-- evalsig -->` marker.
 
 <p align="center">
-  <img src="docs/images/pr-comment.png" alt="An evalsig comment on a pull request: a markdown table with baseline, candidate, diff, 95% CI, Holm-adjusted p and verdict for three metrics, followed by one plain-English line per metric" width="88%">
+  <img src="docs/images/action-report.png" alt="The evalsig markdown report as GitHub renders it: a table with baseline, candidate, diff, 95% CI, Holm-adjusted p and verdict for three metrics, followed by one plain-English line per metric" width="88%">
+  <br><sub>The report the action posts, rendered by GitHub's markdown renderer from the example data.</sub>
 </p>
 
 ```yaml
@@ -136,7 +137,7 @@ jobs:
   eval:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: python run_my_evals.py --out results/candidate.jsonl   # your eval
       - uses: ArjunShuklaCSE/evalsig@main
         with:

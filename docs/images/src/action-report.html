@@ -1,0 +1,70 @@
+<!doctype html>
+<!-- Source for docs/images/action-report.png. The body is the markdown report from
+     `evalsig compare examples/baseline.jsonl examples/candidate.jsonl --lower-is-better latency_ms -f markdown`,
+     rendered by GitHub's markdown API (POST /markdown, mode gfm). Rendered at 1100px wide. -->
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-dark.min.css">
+<style>
+  body { margin: 0; background: #0d1117; width: 1100px; }
+  .frame { margin: 24px; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; }
+  .head { padding: 10px 16px; background: #161b22; border-bottom: 1px solid #30363d; color: #8b949e;
+          font: 14px -apple-system, "Segoe UI", sans-serif; }
+  .head b { color: #e6edf3; }
+  .markdown-body { padding: 16px 24px 20px; }
+</style></head>
+<body><div class="frame"><div class="head"><b>evalsig</b> report, as GitHub renders it</div>
+<div class="markdown-body">
+
+<h3>evalsig: candidate vs baseline</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>Metric</th>
+<th align="right">Baseline</th>
+<th align="right">Candidate</th>
+<th align="right">Diff</th>
+<th align="right">95% CI</th>
+<th align="right">p (Holm)</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>correct</td>
+<td align="right">0.556</td>
+<td align="right">0.636</td>
+<td align="right">+0.079</td>
+<td align="right">[+0.026, +0.132]</td>
+<td align="right">0.019</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>recall@10</td>
+<td align="right">0.636</td>
+<td align="right">0.689</td>
+<td align="right">+0.053</td>
+<td align="right">[-0.030, +0.136]</td>
+<td align="right">0.261</td>
+<td>no detectable difference</td>
+</tr>
+<tr>
+<td>latency_ms</td>
+<td align="right">864</td>
+<td align="right">1,007</td>
+<td align="right">+142</td>
+<td align="right">[+131, +154]</td>
+<td align="right">&lt;0.001</td>
+<td><strong>worse</strong></td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<ul>
+<li><strong>correct</strong>: better (n=151, p = 0.019).
+<ul>
+<li>fixed 15, broke 3 (McNemar exact p = 0.008, uncorrected).</li>
+</ul>
+</li>
+<li><strong>recall@10</strong>: no detectable difference (n=151). Smallest change this test set can reliably detect: about ±0.120.</li>
+<li><strong>latency_ms</strong>: worse (n=151, p &lt; 0.001; lower is better for this metric).</li>
+</ul>
+<p><sub>95% CI: paired bootstrap, 10,000 resamples, seed 0. p: paired sign-flip permutation test, Holm-adjusted across 3 metrics. Verdicts use alpha 0.05.</sub></p></div></div></body></html>
