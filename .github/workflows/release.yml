@@ -27,8 +27,10 @@ jobs:
 
   pypi:
     # Trusted publishing: no API token. PyPI must list this repository, this workflow
-    # (release.yml) and the "pypi" environment as a trusted publisher.
+    # (release.yml) and the "pypi" environment as a trusted publisher. Until that is set
+    # up, leave the repository variable PUBLISH_TO_PYPI unset and this job is skipped.
     needs: build
+    if: vars.PUBLISH_TO_PYPI == 'true'
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -43,7 +45,9 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
-    needs: pypi
+    # Runs after PyPI when publishing there, and on its own when that job is skipped.
+    needs: [build, pypi]
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.pypi.result != 'failure' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

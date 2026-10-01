@@ -9,6 +9,7 @@
   <img src="https://img.shields.io/badge/mypy-strict-2A6DB2" alt="mypy strict">
   <img src="https://img.shields.io/badge/lint-ruff-D7FF64?logo=ruff&logoColor=black" alt="ruff">
   <img src="https://img.shields.io/badge/GitHub%20Action-ready-8b5cf6?logo=githubactions&logoColor=white" alt="GitHub Action">
+  <a href="https://github.com/ArjunShuklaCSE/evalsig/releases/latest"><img src="https://img.shields.io/github/v/release/ArjunShuklaCSE/evalsig?color=8b5cf6&label=release" alt="Latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
 </p>
 
@@ -74,7 +75,7 @@ evalsig compare examples/baseline.jsonl examples/candidate.jsonl --lower-is-bett
 The example is a synthetic RAG system on 151 questions, before and after adding a reranker ([`examples/make_data.py`](examples/make_data.py)). `--format markdown` and `--format json` print the same result for pull requests and scripts.
 
 > [!NOTE]
-> evalsig is not on PyPI yet. The first tagged release will publish it as `evalsig-stats` (the name `evalsig` is taken there). The import name and the command stay `evalsig`.
+> evalsig is not on PyPI yet. Each [release](https://github.com/ArjunShuklaCSE/evalsig/releases/latest) has the wheel attached, and `pip install` works on it directly. On PyPI it will be published as `evalsig-stats` (the name `evalsig` is taken there). The import name and the command stay `evalsig`.
 
 <details>
 <summary>Text version of the output above</summary>
@@ -139,7 +140,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: python run_my_evals.py --out results/candidate.jsonl   # your eval
-      - uses: ArjunShuklaCSE/evalsig@main
+      - uses: ArjunShuklaCSE/evalsig@v0.1.0
         with:
           baseline: results/baseline.jsonl     # committed results of the main branch
           candidate: results/candidate.jsonl
@@ -342,7 +343,7 @@ uv run mypy                                          # strict, on src/
 uv run docs/images/src/figures.py                    # re-render the README figures
 ```
 
-A test checks that every `$ evalsig` example in this README still matches the tool's real output. Pushing a `v*` tag runs the tests, builds the package, publishes it to PyPI through trusted publishing and creates a GitHub release with notes from the changelog.
+A test checks that every `$ evalsig` example in this README still matches the tool's real output. Pushing a `v*` tag runs the tests, builds the package and creates a GitHub release with notes from the changelog. Once the repository variable `PUBLISH_TO_PYPI` is `true`, the same workflow publishes to PyPI through trusted publishing (no token stored in the repository).
 
 ## License
 
