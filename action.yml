@@ -1,0 +1,119 @@
+name: evalsig
+description: Compare two eval runs and post whether the candidate is really better, worse, or within noise.
+author: Arjun Shukla
+branding:
+  icon: bar-chart-2
+  color: purple
+
+inputs:
+  baseline:
+    description: Path to the baseline results file (.jsonl or .csv).
+    required: true
+  candidate:
+    description: Path to the candidate results file (.jsonl or .csv), same test examples.
+    required: true
+  metrics:
+    description: Metrics to compare, separated by spaces or commas. Default is every numeric column.
+    default: ""
+  lower-is-better:
+    description: Metrics where lower is better (latency, cost), separated by spaces or commas.
+    default: ""
+  fail-on:
+    description: "Fail the job if any metric is 'worse', or is 'not-better'. Empty: never fail."
+    default: ""
+  alpha:
+    description: Significance level.
+    default: "0.05"
+  allow-partial:
+    description: Compare only ids present in both files instead of stopping with an error.
+    default: "false"
+  comment:
+    description: Post (and on later runs update) one comment with the results on the pull request.
+    default: "true"
+  github-token:
+    description: Token used to post the comment. Needs pull-requests write permission.
+    default: ${{ github.token }}
+
+outputs:
+  failed:
+    description: "'true' if the fail-on condition was met."
+    value: ${{ steps.compare.outputs.failed }}
+  report:
+    description: Path to the markdown report.
+    value: ${{ steps.compare.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      id: python
+      with:
+        python-version: "3.12"
+        update-environment: false
+
+    - name: Install evalsig
+      shell: bash
+      env:
+        PYTHON: ${{ steps.python.outputs.python-path }}
+      run: |
+        "$PYTHON" -m venv "$RUNNER_TEMP/evalsig-venv"
+        "$RUNNER_TEMP/evalsig-venv/bin/pip" install --quiet --disable-pip-version-check "$GITHUB_ACTION_PATH"
+
+    - name: Compare runs
+      id: compare
+      shell: bash
+      env:
+        BASELINE: ${{ inputs.baseline }}
+        CANDIDATE: ${{ inputs.candidate }}
+        METRICS: ${{ inputs.metrics }}
+        LOWER_IS_BETTER: ${{ inputs.lower-is-better }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        ALPHA: ${{ inputs.alpha }}
+        ALLOW_PARTIAL: ${{ inputs.allow-partial }}
+      run: |
+        args=(compare "$BASELINE" "$CANDIDATE" --format markdown --alpha "$ALPHA")
+        IFS=$', \t' read -ra metrics <<< "$METRICS"
+        IFS=$', \t' read -ra lower <<< "$LOWER_IS_BETTER"
+        for m in "${metrics[@]}"; do args+=(--metric "$m"); done
+        for m in "${lower[@]}"; do args+=(--lower-is-better "$m"); done
+        if [ -n "$FAIL_ON" ]; then args+=(--fail-on "$FAIL_ON"); fi
+        if [ "$ALLOW_PARTIAL" = "true" ]; then args+=(--allow-partial); fi
+
+        report="$RUNNER_TEMP/evalsig-report.md"
+        status=0
+        "$RUNNER_TEMP/evalsig-venv/bin/evalsig" "${args[@]}" > "$report" || status=$?
+        if [ "$status" -gt 1 ]; then
+          exit "$status"  # invalid input: evalsig already printed the reason
+        fi
+        cat "$report" >> "$GITHUB_STEP_SUMMARY"
+        echo "report=$report" >> "$GITHUB_OUTPUT"
+        if [ "$status" -eq 1 ]; then echo "failed=true"; else echo "failed=false"; fi >> "$GITHUB_OUTPUT"
+
+    - name: Comment on the pull request
+      if: inputs.comment == 'true' && github.event.pull_request.number
+      # Fork PRs get a read-only token; a missing comment should not fail the eval check.
+      continue-on-error: true
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        REPORT: ${{ steps.compare.outputs.report }}
+        PR: ${{ github.event.pull_request.number }}
+      run: |
+        existing=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
+          --jq '.[] | select(.body | startswith("<!-- evalsig -->")) | .id' | head -n 1)
+        if [ -n "$existing" ]; then
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existing" -F "body=@$REPORT" > /dev/null
+          echo "Updated comment $existing"
+        else
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F "body=@$REPORT" > /dev/null
+          echo "Posted a new comment"
+        fi
+
+    - name: Apply fail-on
+      if: steps.compare.outputs.failed == 'true'
+      shell: bash
+      env:
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        echo "::error::evalsig: the fail-on '$FAIL_ON' condition was met. See the job summary."
+        exit 1

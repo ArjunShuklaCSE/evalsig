@@ -1,0 +1,67 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked
+      - run: uv run pytest -q
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run mypy
+
+  action:
+    # Runs this repository's own GitHub Action on the example data.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: fail-on triggers when a metric is worse
+        id: worse
+        uses: ./
+        continue-on-error: true
+        with:
+          baseline: examples/baseline.jsonl
+          candidate: examples/candidate.jsonl
+          lower-is-better: latency_ms
+          fail-on: worse
+          comment: "false"
+      - name: Check that it failed for the right reason
+        env:
+          FAILED: ${{ steps.worse.outputs.failed }}
+          OUTCOME: ${{ steps.worse.outcome }}
+        run: test "$FAILED" = true && test "$OUTCOME" = failure
+
+      - name: Report on the example data (comments on pull requests)
+        uses: ./
+        with:
+          baseline: examples/baseline.jsonl
+          candidate: examples/candidate.jsonl
+          lower-is-better: latency_ms
