@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Source for docs/images/social-preview.png (GitHub's social preview, 1280x640). -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; }
+  body {
+    width: 1280px; height: 640px; overflow: hidden; box-sizing: border-box;
+    padding: 112px 96px 0;
+    font-family: "Segoe UI", "Inter", system-ui, sans-serif; color: #f0eef8;
+    background:
+      radial-gradient(700px 460px at 95% 0%, rgba(124, 58, 237, 0.32), transparent 70%),
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px) 0 0 / 40px 40px,
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px) 0 0 / 40px 40px,
+      #0b0c12;
+  }
+  .title { display: flex; align-items: center; gap: 28px; }
+  .title img { width: 104px; height: 104px; }
+  h1 { margin: 0; font-size: 104px; font-weight: 700; letter-spacing: -2.5px; line-height: 1; }
+  p { margin: 44px 0 0; font-size: 40px; line-height: 1.3; color: #a6abc1; max-width: 1060px; }
+  p b { color: #f0eef8; font-weight: 600; }
+  code { display: inline-block; margin-top: 56px; padding: 14px 26px; border-radius: 14px;
+         border: 2px solid #34384c; background: rgba(20, 22, 32, 0.85);
+         font-family: "Cascadia Mono", "Consolas", monospace; font-size: 28px; color: #d9d6e8; }
+  code span { color: #8fddc5; }
+</style>
+</head>
+<body>
+  <div class="title"><img src="../../../assets/brand/logo.svg" alt=""><h1>evalsig</h1></div>
+  <p>Is the new version of your AI system <b>really better</b>, or is the difference just luck?</p>
+  <code><span>$</span> evalsig compare baseline.jsonl candidate.jsonl</code>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<!-- Source for docs/images/banner.png. Rendered at 2560x800 with a headless browser. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; }
+  body {
+    width: 2560px; height: 800px; overflow: hidden; box-sizing: border-box;
+    padding: 132px 144px 0;
+    font-family: "Segoe UI", "Inter", system-ui, sans-serif;
+    color: #f0eef8;
+    background:
+      radial-gradient(1100px 620px at 92% 0%, rgba(124, 58, 237, 0.30), transparent 70%),
+      radial-gradient(800px 500px at 100% 100%, rgba(13, 148, 136, 0.12), transparent 70%),
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px) 0 0 / 64px 64px,
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px) 0 0 / 64px 64px,
+      #0b0c12;
+  }
+  .title { display: flex; align-items: center; gap: 40px; }
+  .title img { width: 128px; height: 128px; }
+  h1 { margin: 0; font-size: 132px; font-weight: 700; letter-spacing: -3px; line-height: 1; }
+  p { margin: 52px 0 0; max-width: 1900px; font-size: 52px; line-height: 1.32; color: #a6abc1; }
+  p b { color: #f0eef8; font-weight: 600; }
+  .flow { display: flex; align-items: center; gap: 14px; margin-top: 92px;
+          font-family: "Cascadia Mono", "Consolas", monospace; font-size: 27px; }
+  .pill { padding: 12px 22px; border-radius: 999px; border: 2px solid #34384c;
+          background: rgba(20, 22, 32, 0.85); color: #d9d6e8; white-space: nowrap; }
+  .arrow { color: #5c6178; }
+  .better { border-color: #2dd4bf; color: #8fddc5; }
+  .noise { border-color: #8b5cf6; color: #c4b5fd; }
+  .worse { border-color: #f87171; color: #fca5a5; }
+</style>
+</head>
+<body>
+  <div class="title"><img src="../../../assets/brand/logo.svg" alt=""><h1>evalsig</h1></div>
+  <p>Your eval score went from 0.81 to 0.85. evalsig tells you whether that is <b>really better</b>, <b>really worse</b>, or <b>within the noise</b> of your test set.</p>
+  <div class="flow">
+    <span class="pill">baseline + candidate</span><span class="arrow">→</span>
+    <span class="pill">join on id</span><span class="arrow">→</span>
+    <span class="pill">paired bootstrap</span><span class="arrow">→</span>
+    <span class="pill">sign-flip test</span><span class="arrow">→</span>
+    <span class="pill">Holm</span><span class="arrow">→</span>
+    <span class="pill better">better</span>
+    <span class="pill worse">worse</span>
+    <span class="pill noise">no detectable difference</span>
+  </div>
+</body>
+</html>

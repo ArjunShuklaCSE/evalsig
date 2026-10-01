@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="evalsig logo: two error bars beside a zero line, one clearly above zero">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="0.55" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#4c1d95"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.22"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#tile)"/>
+  <rect width="512" height="512" rx="116" fill="url(#shine)"/>
+  <!-- zero line: "no difference" -->
+  <path d="M178 92V420" stroke="#fff" stroke-opacity="0.6" stroke-width="16" stroke-linecap="round" stroke-dasharray="0.1 34"/>
+  <!-- an interval that crosses zero: within the noise -->
+  <g stroke="#fff" stroke-opacity="0.55" stroke-width="24" stroke-linecap="round" fill="none">
+    <path d="M90 340H300 M90 302V378 M300 302V378"/>
+  </g>
+  <circle cx="206" cy="340" r="27" fill="#6d28d9" stroke="#fff" stroke-opacity="0.8" stroke-width="15"/>
+  <!-- an interval clear of zero: really better -->
+  <g stroke="#fff" stroke-width="26" stroke-linecap="round" fill="none">
+    <path d="M236 176H426 M236 134V218 M426 134V218"/>
+  </g>
+  <circle cx="331" cy="176" r="34" fill="#7c3aed" stroke="#fff" stroke-width="18"/>
+</svg>
