@@ -165,35 +165,31 @@ The outputs are `failed` (`true` when the fail-on condition was met) and `report
 ## Architecture
 
 ```mermaid
-flowchart LR
-    subgraph input["Your eval tool"]
-        B[("baseline<br/>.jsonl / .csv")]
-        C[("candidate<br/>.jsonl / .csv")]
+flowchart TB
+    subgraph data["data.py: read and check the inputs"]
+        direction LR
+        B[("baseline<br/>.jsonl / .csv")] --> J["load, join on id<br/>validate, detect metrics"]
+        C[("candidate<br/>.jsonl / .csv")] --> J
     end
-    subgraph data["data.py"]
-        L["load_rows"] --> J["join on id<br/>validate, detect metrics"]
-    end
-    subgraph engine["core.py + stats.py"]
-        D["per-example differences<br/>summed per group"]
-        D --> BS["paired bootstrap<br/>interval, SE"]
+    subgraph engine["core.py + stats.py: one comparison per metric"]
+        direction LR
+        D["per-example<br/>differences"] --> BS["paired bootstrap<br/>interval, SE"]
         D --> SF["sign-flip test<br/>p-value"]
         D --> MN["McNemar<br/>fixed / broke"]
         BS --> MDE["minimum<br/>detectable effect"]
-        SF --> H["Holm across metrics"]
+        SF --> H["Holm across<br/>metrics"]
         H --> V{"verdict"}
     end
-    subgraph output["report.py + cli.py"]
+    subgraph output["report.py + cli.py: show the result"]
+        direction LR
         T["terminal table"]
         JS["JSON"]
-        MD["markdown"]
+        MD["markdown"] --> A["GitHub Action<br/>one PR comment"]
     end
-    B --> L
-    C --> L
     J --> D
     V --> T
     V --> JS
     V --> MD
-    MD --> A["GitHub Action<br/>one PR comment, updated in place"]
 ```
 
 | Module | Responsibility |
